@@ -1,28 +1,29 @@
-import jwt from 'jsonwebtoken';
-import  config from '../config/config.js';
+import jwt from "jsonwebtoken";
+import  config from "../config/config.js";
 
 export const jwtAuthMiddleware = (req,res, next) => {
 
-    //Extract the token after the Bearer in the request headers
-    const token = req.headers.authorization.split(' ')[1];
+  //Extract the token after the Bearer in the request headers
+  const token = req.headers.authorization.split(" ")[1];
 
-    if(!token) {
-        return res.status(401).json({error: 'Unauthorized'});
-    }
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-    try{
+  try {
+    const decoded = jwt.verify(token, config.jwtSecret);
         
-        const decoded = jwt.verify(token, config.jwtSecret);
-        
-        req.user = decoded;
-        next();
-    }
-    catch(err){
-        res.status(401).json({error: 'Invalid token'});
-    }
-}
+    req.user = decoded;
+    
+    next();
+  }
+  catch {
+    res.status(401).json({ error: "Invalid token" });
+  }
+};
 
 export const generateToken = (userData) => {
 
-    return jwt.sign(userData, config.jwtSecret);
-}
+  return jwt.sign(userData, config.jwtSecret);
+
+};
