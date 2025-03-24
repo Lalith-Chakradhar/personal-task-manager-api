@@ -23,8 +23,8 @@ This project provides APIs to register and login users, to create, update and de
 
 ```bash
 
-git clone https://github.com/Lalith-Chakradhar/personal-task-manager-api-master.git
-cd personal-task-manager-api-master
+git clone https://github.com/Lalith-Chakradhar/personal-task-manager-api.git
+cd personal-task-manager-api
 npm install
 
 ```
