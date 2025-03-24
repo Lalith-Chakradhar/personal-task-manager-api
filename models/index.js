@@ -3,6 +3,7 @@ import config from "../config/config.js";
 import UserModel from "./user.model.js";
 import TaskModel from "./task.model.js";
 
+//Create a sequelize connection to the database using the database details
 const sequelize = new Sequelize(
   config.database,
   config.username,
@@ -14,12 +15,16 @@ const sequelize = new Sequelize(
   },
 );
 
+//Define Users and Tasks ORMs
 const Users = UserModel(sequelize, Sequelize.DataTypes);
 const Tasks = TaskModel(sequelize, Sequelize.DataTypes);
 
+//Create relations between the ORMs
 Users.hasMany(Tasks, { foreignKey: "userId" });
 Tasks.belongsTo(Users, { foreignKey: "userId" });
 
+//Connect to the actual database and sync with it such that all tables are in sync 
+//with the original database
 const connect = async () => {
   try {
     await sequelize.authenticate();

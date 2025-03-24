@@ -7,6 +7,7 @@ export const createTaskService = async (userId, taskData) => {
   validateTaskBeforeCreateOrUpdate(taskData);
 
   try {
+    //Create task in the db for the particular user
     const task = await Tasks.create({
       ...taskData,
       userId,
@@ -65,6 +66,7 @@ export const fetchAllTasksService = async (userId, filters) => {
       { [Op.lte]: new Date(dueDateEnd) }; // get all due dates less than dueDateEnd
     }
 
+    //Provide pagination details like current page and limit of records in each page
     let pageInt = parseInt(page);
     let limitInt = parseInt(limit);
 
@@ -72,6 +74,8 @@ export const fetchAllTasksService = async (userId, filters) => {
 
     let order = [];
 
+    //Only push sorting details array, if there is sortBy param, and sortBy and sortOrder 
+    //have valid values
     if (
       sortBy &&
       (sortBy === "dueDate" || sortBy === "priority") &&
@@ -80,6 +84,7 @@ export const fetchAllTasksService = async (userId, filters) => {
       order.push([sortBy, sortOrder.toUpperCase()]);
     }
 
+    //find all and count the tasks of the user based on the filters and sort order
     const result = await Tasks.findAndCountAll({
       where: whereClause,
       limit: limitInt,
@@ -103,6 +108,8 @@ export const fetchAllTasksService = async (userId, filters) => {
 
 export const getTaskByIdService = async (userId, taskId) => {
   try {
+
+    //Find task of particular user with task id
     const task = await Tasks.findOne({
       where: {
         id: taskId,
@@ -122,6 +129,8 @@ export const getTaskByIdService = async (userId, taskId) => {
 };
 
 const validateTaskBeforeCreateOrUpdate = (taskData) => {
+
+  //Check all the fields are present before updating or creating a task in the db
   const { title, description, priority, dueDate, status } = taskData;
 
   if (!title) {
@@ -141,6 +150,8 @@ export const updateTaskService = async (userId, taskId, taskData) => {
   validateTaskBeforeCreateOrUpdate(taskData);
 
   try {
+
+    //Update task of particular user with task Id and task details
     const result = await Tasks.update(taskData, {
       where: {
         id: taskId,
@@ -154,6 +165,7 @@ export const updateTaskService = async (userId, taskId, taskData) => {
       throw new Error("No task found with the provided taskId and userId.");
     }
 
+    //return the updated tasks
     return await getTaskByIdService(userId, taskId);
   } catch (error) {
     console.log("Error in updating the task");
@@ -163,8 +175,11 @@ export const updateTaskService = async (userId, taskId, taskData) => {
 
 export const deleteTaskService = async (userId, taskId) => {
   try {
+    
+    //Find the task with particular id to be deleted
     const task = await getTaskByIdService(userId, taskId);
 
+    //Destroy the task in the db
     await task.destroy();
 
     return task;
