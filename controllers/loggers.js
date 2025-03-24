@@ -10,7 +10,6 @@ winston.loggers.add("infoLogger", {
     prettyPrint(),
   ),
   transports: [
-    new winston.transports.Console(),
     new winston.transports.File({ filename: "server.log" }),
   ],
 });
@@ -24,7 +23,6 @@ winston.loggers.add("errorLogger", {
     prettyPrint(),
   ),
   transports: [
-    new winston.transports.Console(),
     new winston.transports.File({ filename: "error.log" }),
   ],
 });

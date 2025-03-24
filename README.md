@@ -17,6 +17,15 @@ This project provides APIs to register and login users, to create, update and de
 3. **Update Task** - Update task details.
 4. **Delete Task** - Delete a task.
 
+**Logging:**
+1. **Automatic Logs**:
+   - Logs the server activity and errors to two separate log files:
+     - `server.log`: Contains information logs (e.g., incoming requests, successful operations).
+     - `error.log`: Contains error logs (e.g., failed requests, unexpected errors).
+     
+2. **Log Formats**:
+   - The logs are human-readable and include useful information such as timestamps, log levels (e.g., `info`, `error`), request method and URL, and information for operations that affect the data.
+
 ## Installation
 
 1. Clone the repo and install dependencies -
@@ -43,7 +52,7 @@ JWT_SECRET=your_jwt_secret_key
 
 ```
 
-1. Start the server by running - 
+3. Start the server by running - 
    
 ```bash
 

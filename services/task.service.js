@@ -79,7 +79,7 @@ export const fetchAllTasksService = async (userId, filters) => {
     if (
       sortBy &&
       (sortBy === "dueDate" || sortBy === "priority") &&
-      (sortOrder.toUpperCase === "ASC" || sortOrder.toUpperCase === "DESC")
+      (sortOrder.toUpperCase() === "ASC" || sortOrder.toUpperCase() === "DESC")
     ) {
       order.push([sortBy, sortOrder.toUpperCase()]);
     }
