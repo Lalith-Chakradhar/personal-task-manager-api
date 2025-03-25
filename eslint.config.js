@@ -12,7 +12,6 @@ export default defineConfig([
     plugins: { js },
     extends: ["js/recommended"],
     rules: {
-      "quotes": ["error", "double"],
       "indent": ["error", 2],
       "max-len": ["error", { "code": 100 }],
       "semi": ["error", "always"],

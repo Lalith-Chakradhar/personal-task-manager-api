@@ -1,7 +1,4 @@
-import db from "../models/index.js";
-import { Op } from "sequelize";
-
-const Tasks = db.Tasks;
+import db from "../models/db";
 
 export const createTaskService = async (userId, taskData) => {
   validateTaskBeforeCreateOrUpdate(taskData);

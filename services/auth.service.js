@@ -1,8 +1,6 @@
 import bcrypt from "bcrypt";
 
-import db from "../models/index.js";
-
-const Users = db.Users;
+import db from "../models/db";
 
 export const createUserService = async (formData) => {
   //Extract the username, email and password from the request body
@@ -22,8 +20,11 @@ export const createUserService = async (formData) => {
   }
 
   try {
+    
     //Find user in the db with particular username
-    const user = await Users.findOne({ where: { username } });
+    let queryFindUser = `SELECT * from users where username=$1`;
+
+    const user = await db.oneOrNone(queryFindUser, [username]);
 
     //If the user is found, then the username cannot be used. A different username 
     //alongwith email and password has to be created for registration.
@@ -35,11 +36,12 @@ export const createUserService = async (formData) => {
     const encryptedPassword = await bcrypt.hash(password, 10);
 
     //create new user in the db alongwith hashed password.
-    const createdUser = await Users.create({
-      username,
-      email,
-      password: encryptedPassword,
-    });
+
+    let queryInsertUser = 
+    `INSERT INTO users 
+    (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email;`;
+
+    const createdUser = await db.one(queryInsertUser, [username, email, encryptedPassword]);
 
     return createdUser;
   } catch (err) {
@@ -55,8 +57,10 @@ export const verifyUserService = async (userData) => {
   const { email, password } = userData;
 
   try {
-    //Find user with the particular email id in the db if the db is not empty 
-    const user = await Users?.findOne({ where: { email } });
+    //Find user with the particular email id in the db.
+    let queryFindUser = `SELECT * from users where email=$1`;
+
+    const user = await db.oneOrNone(queryFindUser, [email]);
 
     //If the user is not found, then throw error saying invalid email id
     if (!user) {
