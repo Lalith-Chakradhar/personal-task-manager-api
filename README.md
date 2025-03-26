@@ -26,7 +26,7 @@ This project provides APIs to register and login users, to create, update and de
 2. **Log Formats**:
    - The logs are human-readable and include useful information such as timestamps, log levels (e.g., `info`, `error`), request method and URL, and information for operations that affect the data.
 
-### **API Documentation using Swagger**:
+**API Documentation using Swagger**:
 1. You can interact with the APIs after starting the project by visiting the following link:
    - [Swagger UI - http://localhost:3000/api-docs/#/](http://localhost:3000/api-docs/#/)
 
