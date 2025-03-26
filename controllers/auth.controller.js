@@ -42,10 +42,8 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   try {
 
-    //get the user data from request body
     const data = req.body;
 
-    // Log info about the incoming login request
     logger.info("Login request received", 
       { reqMethod: req.method, reqUrl: req.originalUrl });
 
@@ -62,7 +60,6 @@ export const loginUser = async (req, res, next) => {
 
     res.status(200).json({ message: "Login Successful!", token });
 
-    // Log info about successful login
     logger.info("User logged in successfully", 
       { reqMethod: req.method, reqUrl: req.originalUrl });
 

@@ -42,7 +42,6 @@ export const getAllTasksOfUser = async (req, res, next) => {
     //Acquire the optional filters from the query parameters
     const filters = req.query;
 
-    // Log the tasks fetch request with filters
     logger.info("Fetching tasks for user",
       { reqMethod: req.method, reqUrl: req.originalUrl });
 
@@ -54,7 +53,6 @@ export const getAllTasksOfUser = async (req, res, next) => {
       .status(200)
       .json({ message: "Fetched the tasks successfully", filteredTasks });
     
-    // Log the successful task fetching
     logger.info("Tasks fetched successfully",
       { reqMethod: req.method, reqUrl: req.originalUrl });
     
@@ -73,14 +71,12 @@ export const getTaskById = async (req, res, next) => {
     const userId = req.user.id;
     const taskId = req.params.id;
 
-    // Log the task fetch by ID request
     logger.info("Fetching task by ID",
       { reqMethod: req.method, reqUrl: req.originalUrl });
    
     //Get task of a particular user by the task id
     const task = await getTaskByIdService(userId, taskId);
 
-    // Log the successful task fetch by ID
     logger.info("Task fetched successfully by ID",
       { reqMethod: req.method, reqUrl: req.originalUrl });
 
@@ -102,14 +98,12 @@ export const updateTask = async (req, res, next) => {
 
     const taskData = req.body;
 
-    // Log the task update request
     logger.info("Task update request received",
       { reqMethod: req.method, reqUrl: req.originalUrl });
 
     //Update the task with modified data for a particular user using their id
     const modifiedTask = await updateTaskService(userId, taskId, taskData);
 
-    // Log the successful task update
     logger.info("Task updated successfully",
       { reqMethod: req.method, reqUrl: req.originalUrl });
 
@@ -131,7 +125,6 @@ export const deleteTask = async (req, res, next) => {
     const userId = req.user.id;
     const taskId = req.params.id;
 
-    // Log the task delete request
     logger.info("Task delete request received",
       { reqMethod: req.method, reqUrl: req.originalUrl });
 
@@ -142,7 +135,6 @@ export const deleteTask = async (req, res, next) => {
       .status(204)
       .json({ message: "Task deleted successfully", nowDeletedTask });
 
-    // Log the successful task deletion
     logger.info("Task deleted successfully",
       { reqMethod: req.method, reqUrl: req.originalUrl });
    

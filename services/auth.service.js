@@ -5,20 +5,12 @@ import db from "../models/index.js";
 const Users = db.Users;
 
 export const createUserService = async (formData) => {
-  //Extract the username, email and password from the request body
+
   const { username, email, password } = formData;
 
   //Check whether each and every field is present
-  if (!username) {
-    throw new Error("Username is required");
-  }
-
-  if (!email) {
-    throw new Error("Email is required");
-  }
-
-  if (!password) {
-    throw new Error("Password is required");
+  if (!username || !email || !password) {
+    throw new Error("Missing credentials");
   }
 
   try {
@@ -51,7 +43,7 @@ export const createUserService = async (formData) => {
 };
 
 export const verifyUserService = async (userData) => {
-  //Extract the email and password from the request body.
+
   const { email, password } = userData;
 
   try {
@@ -60,7 +52,7 @@ export const verifyUserService = async (userData) => {
 
     //If the user is not found, then throw error saying invalid email id
     if (!user) {
-      const error = new Error("Invalid email id");
+      const error = new Error("Invalid credentials");
       error.statusCode = 400;
       throw error;
     }
@@ -70,7 +62,7 @@ export const verifyUserService = async (userData) => {
 
     //If the password does not match, then throw error saying invalid password
     if (!isMatch) {
-      const error = new Error("Invalid password");
+      const error = new Error("Invalid credentials");
       error.statusCode = 400;
       throw error;
     }

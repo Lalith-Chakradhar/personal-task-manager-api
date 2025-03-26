@@ -23,7 +23,12 @@ export const jwtAuthMiddleware = (req,res, next) => {
     //Go to the controller after this
     next();
   }
-  catch {
+  catch (err) {
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired" });
+    }
+    
     res.status(401).json({ error: "Invalid token" });
   }
 };
@@ -31,6 +36,6 @@ export const jwtAuthMiddleware = (req,res, next) => {
 //Generate a token with the user details and jwt secret
 export const generateToken = (userData) => {
 
-  return jwt.sign(userData, config.jwtSecret);
+  return jwt.sign(userData, config.jwtSecret, { expiresIn: "30m" } );
 
 };
