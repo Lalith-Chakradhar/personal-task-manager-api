@@ -3,8 +3,15 @@ import  config from "../config/config.js";
 
 export const jwtAuthMiddleware = (req,res, next) => {
 
-  //Extract the token after the Bearer in the request headers
-  const token = req.headers.authorization.split(" ")[1];
+  // Check if the Authorization header exists
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header is missing" });
+  }
+
+  // Split the Authorization header into 'Bearer' and token
+  const token = authHeader.split(" ")[1];
 
   //If token is not provided, then send response of unauthorized
   if (!token) {

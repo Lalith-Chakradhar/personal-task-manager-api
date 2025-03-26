@@ -35,12 +35,12 @@ const options = {
   apis: ["./routes/*.js"],  // Look for API documentation comments in all route files
 };
 
-const swaggerSpec = swaggerjsdoc(options);
+const swaggerSpecs = swaggerjsdoc(options);
 
 app.use(
   "/api-docs",
   swaggerui.serve,
-  swaggerui.setup(swaggerSpec),
+  swaggerui.setup(swaggerSpecs),
 );
 
 //Use the errorHandler after the routes such that on doing a next call,
