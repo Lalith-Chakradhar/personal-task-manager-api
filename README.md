@@ -4,7 +4,7 @@ A server containing APIs used for managing users and tasks.
 
 ## Description
 
-This project provides APIs to register and login users, to create, update and delete tasks of a particular user and fetch all the tasks of the user. The project is built using **Node.js**, **Express.js**, and **Sequelize ORM** with a **MySQL** database.
+This project provides APIs to register and login users, to create, update and delete tasks of a particular user and fetch all the tasks of the user. The project is built using **Node.js**, **Express.js**, and **PostgreSQL** database.
 
 ## Features
 
@@ -26,6 +26,14 @@ This project provides APIs to register and login users, to create, update and de
 2. **Log Formats**:
    - The logs are human-readable and include useful information such as timestamps, log levels (e.g., `info`, `error`), request method and URL, and information for operations that affect the data.
 
+**API Documentation using Swagger**:
+1. You can interact with the APIs after starting the project by visiting the following link:
+   - [Swagger UI - http://localhost:3000/api-docs/#/](http://localhost:3000/api-docs/#/)
+
+2. The Swagger UI will display two main sets of routes: user routes and task routes. To interact with task routes, you must first authorize by pressing the "Authorize" button in the top-right corner of the Swagger UI.
+
+3. To authorize, paste the authorization token you received after logging in. This token is required for interacting with task-related endpoints.
+
 ## Installation
 
 1. Clone the repo and install dependencies -
@@ -46,7 +54,7 @@ DB_USER=your_database_username
 DB_PASSWORD=your_database_password
 DB_NAME=your_database_name
 DB_HOST=your_database_host (usually localhost for local setups)
-DB_PORT=your_database_port (Default for MySQL port is 3306)
+DB_PORT=your_database_port (Default for PostgreSQL port is 5432)
 PORT=your_server_port
 JWT_SECRET=your_jwt_secret_key
 

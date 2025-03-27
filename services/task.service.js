@@ -1,4 +1,4 @@
-import db from "../models/db";
+import db from "../models/db.js";
 
 export const createTaskService = async (userId, taskData) => {
   validateTaskBeforeCreateOrUpdate(taskData);
@@ -37,34 +37,51 @@ export const fetchAllTasksService = async (userId, filters) => {
     } = filters;
 
     //Dynamically construct filter and sort options based on their availability
-    let whereClause = ` WHERE userId = ${userId}`;
+    let whereClause = ` WHERE userId = $1`;
+
+    const queryParams = [userId];
 
     if (title) {
-      whereClause += ` AND title LIKE "%${title}%"`;
+
+      whereClause += ` AND title LIKE $${queryParams.length + 1}`;
+      queryParams.push(`%${title}%`);
+
     }
 
     if (priority) {
-      whereClause += ` AND priority="${priority}"`;
+
+      whereClause += ` AND priority = $${queryParams.length + 1}`;
+      queryParams.push(priority);
+
     }
 
     if (status) {
-      whereClause += ` AND status="${status}"`;
+
+      whereClause += ` AND status = $${queryParams.length + 1}`;
+      queryParams.push(status);
+
     }
 
     if (dueDateStart && dueDateEnd) {
       
       //get all dueDates between this range
-      whereClause += ` AND dueDate BETWEEN ${new Date(dueDateStart)} AND ${new Date(dueDateEnd)}`;
+      whereClause += 
+      ` AND dueDate BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`;
+      
+      queryParams.push(dueDateStart.split('T')[0], dueDateEnd.split('T')[0]); 
 
     } else if (dueDateStart) {
       
       //when only dueDateStart is provided, get all due dates greater than dueDateStart
-      whereClause += ` AND dueDate>=${new Date(dueDateStart)}`;
+      whereClause += ` AND dueDate >= $${queryParams.length + 1}`;
+
+      queryParams.push(dueDateStart.split('T')[0]); 
 
     } else if (dueDateEnd) {
 
       //when only dueDateEnd is provided, get all due dates less than dueDateEnd
-      whereClause += ` AND dueDate<=${new Date(dueDateEnd)}`;
+      whereClause += ` AND dueDate <= $${queryParams.length + 1}`;
+      queryParams.push(dueDateEnd.split('T')[0]);
 
     }
 
@@ -83,23 +100,39 @@ export const fetchAllTasksService = async (userId, filters) => {
       (sortBy === "dueDate" || sortBy === "priority") &&
       (sortOrder.toUpperCase() === "ASC" || sortOrder.toUpperCase() === "DESC")
     ) {
-      orderClause = `ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
+      
+      if (sortBy === "priority") {
+        orderClause = `ORDER BY 
+          CASE 
+            WHEN priority = 'low' THEN 1 
+            WHEN priority = 'medium' THEN 2 
+            WHEN priority = 'high' THEN 3 
+            ELSE 4
+          END ${sortOrder.toUpperCase()}`;
+      } 
+      else {
+        //For Dates
+        orderClause = `ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
+      }
+
     }
 
     //find all and count the tasks of the user based on the filters and sort order
     const queryCount = `SELECT COUNT(*) FROM tasks ${whereClause};`;
 
     const queryTasks = `
-      SELECT id, title, description, priority, dueDate, status, createdAt
+      SELECT id, title, description, priority, dueDate, status, createdAt, updatedAt
       FROM tasks 
       ${whereClause} 
       ${orderClause} 
-      LIMIT ${limit} OFFSET ${offset};
+      LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2};
     `;
 
-    const totalTasksCount = await db.one(queryCount);
+    queryParams.push(limitInt, offset);
 
-    const tasks = await db.any(queryTasks);
+    const totalTasksCount = await db.one(queryCount, queryParams);
+
+    const tasks = await db.any(queryTasks, queryParams);
 
     const resultObject = {
       tasks,

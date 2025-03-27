@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 
-import db from "../models/db";
+import db from "../models/db.js";
 
 export const createUserService = async (formData) => {
   //Extract the username, email and password from the request body
