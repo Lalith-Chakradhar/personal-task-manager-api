@@ -1,4 +1,3 @@
-import winston from "winston";
 import {
   createTaskService,
   fetchAllTasksService,
@@ -6,10 +5,7 @@ import {
   updateTaskService,
   deleteTaskService,
 } from "../services/task.service.js";
-import "./loggers.js";
-
-const infoLogger = winston.loggers.get("infoLogger");
-const errorLogger = winston.loggers.get("errorLogger");
+import logger from "../utils/logger.js";
 
 export const createTask = async (req, res, next) => {
   try {
@@ -17,12 +13,8 @@ export const createTask = async (req, res, next) => {
     const data = req.body;
 
     // Log the task creation request
-    infoLogger.info("Task creation request received", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskData: data,
-    });
+    logger.info("Task creation request received",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
 
     //create a task in db with a particular user id and data
     const task = await createTaskService(userId, data);
@@ -30,21 +22,13 @@ export const createTask = async (req, res, next) => {
     res.status(201).json({ message: "Task created successfully", task });
 
     // Log the successful task creation
-    infoLogger.info("Task created successfully", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: task.id,
-      taskTitle: task.title,
-    });
+    logger.info("Task created successfully",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
+  
   } catch (error) {
     // Log the error before passing it to the next middleware
-    errorLogger.error("Task creation failed", {
-      error: error.message,
-      stack: error.stack,
-      requestMethod: req.method,
-      requestUrl: req.originalUrl,
-      userId: req.user.id,
+    logger.error("Task creation failed", {
+      reqMethod: req.method, reqUrl: req.originalUrl, stack: error.stack,
     });
 
     next(error);
@@ -58,13 +42,8 @@ export const getAllTasksOfUser = async (req, res, next) => {
     //Acquire the optional filters from the query parameters
     const filters = req.query;
 
-    // Log the tasks fetch request with filters
-    infoLogger.info("Fetching tasks for user", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      filters: filters,
-    });
+    logger.info("Fetching tasks for user",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
 
     //fetch all tasks from the db using the user specified filters for a particular user.
     const filteredTasks = await fetchAllTasksService(userId, filters);
@@ -74,21 +53,13 @@ export const getAllTasksOfUser = async (req, res, next) => {
       .status(200)
       .json({ message: "Fetched the tasks successfully", filteredTasks });
     
-    // Log the successful task fetching
-    infoLogger.info("Tasks fetched successfully", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskCount: filteredTasks.totalTasks,
-    });
-
+    logger.info("Tasks fetched successfully",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
+    
   } catch (error) {
-    errorLogger.error("Failed to fetch tasks", {
-      error: error.message,
-      stack: error.stack,
-      requestMethod: req.method,
-      requestUrl: req.originalUrl,
-      userId: req.user.id,
+
+    logger.error("Failed to fetch tasks", {
+      reqMethod: req.method, reqUrl: req.originalUrl, stack: error.stack,
     });
 
     next(error);
@@ -100,36 +71,20 @@ export const getTaskById = async (req, res, next) => {
     const userId = req.user.id;
     const taskId = req.params.id;
 
-    // Log the task fetch by ID request
-    infoLogger.info("Fetching task by ID", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: taskId,
-    });
-
+    logger.info("Fetching task by ID",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
+   
     //Get task of a particular user by the task id
     const task = await getTaskByIdService(userId, taskId);
 
-    // Log the successful task fetch by ID
-    infoLogger.info("Task fetched successfully by ID", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: task.id,
-      taskTitle: task.title,
-    });
+    logger.info("Task fetched successfully by ID",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
 
     res.status(200).json({ message: "Task fetched successfully", task });
   } catch (error) {
     
-    errorLogger.error("Failed to fetch task by ID", {
-      error: error.message,
-      stack: error.stack,
-      requestMethod: req.method,
-      requestUrl: req.originalUrl,
-      userId: req.user.id,
-      taskId: req.params.id,
+    logger.error("Failed to fetch task by ID", {
+      reqMethod: req.method, reqUrl: req.originalUrl, stack: error.stack,
     });
 
     next(error);
@@ -143,39 +98,22 @@ export const updateTask = async (req, res, next) => {
 
     const taskData = req.body;
 
-    // Log the task update request
-    infoLogger.info("Task update request received", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: taskId,
-      updatedData: taskData,
-    });
+    logger.info("Task update request received",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
 
     //Update the task with modified data for a particular user using their id
     const modifiedTask = await updateTaskService(userId, taskId, taskData);
 
-    // Log the successful task update
-    infoLogger.info("Task updated successfully", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: modifiedTask.id,
-      taskTitle: modifiedTask.title,
-    });
+    logger.info("Task updated successfully",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
 
     res
       .status(200)
       .json({ message: "Task updated successfully", modifiedTask });
   } catch (error) {
     
-    errorLogger.error("Failed to update task", {
-      error: error.message,
-      stack: error.stack,
-      requestMethod: req.method,
-      requestUrl: req.originalUrl,
-      userId: req.user.id,
-      taskId: req.params.id,
+    logger.error("Failed to update task", {
+      reqMethod: req.method, reqUrl: req.originalUrl, stack: error.stack,
     });
 
     next(error);
@@ -187,13 +125,8 @@ export const deleteTask = async (req, res, next) => {
     const userId = req.user.id;
     const taskId = req.params.id;
 
-    // Log the task delete request
-    infoLogger.info("Task delete request received", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: taskId,
-    });
+    logger.info("Task delete request received",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
 
     //Delete a task with specified ID for a particular user 
     const nowDeletedTask = await deleteTaskService(userId, taskId);
@@ -202,23 +135,13 @@ export const deleteTask = async (req, res, next) => {
       .status(204)
       .json({ message: "Task deleted successfully", nowDeletedTask });
 
-    // Log the successful task deletion
-    infoLogger.info("Task deleted successfully", {
-      method: req.method,
-      url: req.originalUrl,
-      userId: userId,
-      taskId: nowDeletedTask.id,
-      taskTitle: nowDeletedTask.title,
-    });
+    logger.info("Task deleted successfully",
+      { reqMethod: req.method, reqUrl: req.originalUrl });
+   
   } catch (error) {
     
-    errorLogger.error("Failed to delete task", {
-      error: error.message,
-      stack: error.stack,
-      requestMethod: req.method,
-      requestUrl: req.originalUrl,
-      userId: req.user.id,
-      taskId: req.params.id,
+    logger.error("Failed to delete task", {
+      reqMethod: req.method, reqUrl: req.originalUrl, stack: error.stack,
     });
     
     next(error);

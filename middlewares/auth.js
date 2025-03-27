@@ -3,8 +3,15 @@ import  config from "../config/config.js";
 
 export const jwtAuthMiddleware = (req,res, next) => {
 
-  //Extract the token after the Bearer in the request headers
-  const token = req.headers.authorization.split(" ")[1];
+  // Check if the Authorization header exists
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header is missing" });
+  }
+
+  // Split the Authorization header into 'Bearer' and token
+  const token = authHeader.split(" ")[1];
 
   //If token is not provided, then send response of unauthorized
   if (!token) {
@@ -23,7 +30,12 @@ export const jwtAuthMiddleware = (req,res, next) => {
     //Go to the controller after this
     next();
   }
-  catch {
+  catch (err) {
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired" });
+    }
+    
     res.status(401).json({ error: "Invalid token" });
   }
 };
@@ -31,6 +43,6 @@ export const jwtAuthMiddleware = (req,res, next) => {
 //Generate a token with the user details and jwt secret
 export const generateToken = (userData) => {
 
-  return jwt.sign(userData, config.jwtSecret);
+  return jwt.sign(userData, config.jwtSecret, { expiresIn: "30m" } );
 
 };

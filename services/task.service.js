@@ -3,14 +3,19 @@ import db from "../models/db";
 export const createTaskService = async (userId, taskData) => {
   validateTaskBeforeCreateOrUpdate(taskData);
 
+  const { title, description, priority, dueDate, status } = taskData;
+
   try {
     //Create task in the db for the particular user
-    const task = await Tasks.create({
-      ...taskData,
-      userId,
-    });
+    let queryInsertTask = 
+    `INSERT INTO tasks 
+    (title, description, priority, dueDate, status, userId) VALUES ($1, $2, $3, $4, $5, $6) 
+    RETURNING id, title, description, priority, dueDate, status, userId, createdAt;`;
 
-    return task;
+    const createdTask = await db.one(queryInsertTask, 
+      [ title, description, priority, dueDate, status, userId ]);
+
+    return createdTask;
   } catch (err) {
     console.log("Error in creating the user", err);
     throw err;
@@ -32,35 +37,35 @@ export const fetchAllTasksService = async (userId, filters) => {
     } = filters;
 
     //Dynamically construct filter and sort options based on their availability
-    const whereClause = {
-      userId: userId,
-    };
+    let whereClause = ` WHERE userId = ${userId}`;
 
     if (title) {
-      whereClause.title = { [Op.like]: `%${title}%` };
+      whereClause += ` AND title LIKE "%${title}%"`;
     }
 
     if (priority) {
-      whereClause.priority = priority;
+      whereClause += ` AND priority="${priority}"`;
     }
 
     if (status) {
-      whereClause.status = status;
+      whereClause += ` AND status="${status}"`;
     }
 
     if (dueDateStart && dueDateEnd) {
-      whereClause.dueDate = {
-        [Op.between]: 
-        [new Date(dueDateStart), new Date(dueDateEnd)], //get all dueDates between this range
-      };
+      
+      //get all dueDates between this range
+      whereClause += ` AND dueDate BETWEEN ${new Date(dueDateStart)} AND ${new Date(dueDateEnd)}`;
+
     } else if (dueDateStart) {
-      //when only dueDateStart is provided
-      whereClause.dueDate = 
-      { [Op.gte]: new Date(dueDateStart) }; // get all due dates greater than dueDateStart
+      
+      //when only dueDateStart is provided, get all due dates greater than dueDateStart
+      whereClause += ` AND dueDate>=${new Date(dueDateStart)}`;
+
     } else if (dueDateEnd) {
-      //when only dueDateEnd is provided
-      whereClause.dueDate = 
-      { [Op.lte]: new Date(dueDateEnd) }; // get all due dates less than dueDateEnd
+
+      //when only dueDateEnd is provided, get all due dates less than dueDateEnd
+      whereClause += ` AND dueDate<=${new Date(dueDateEnd)}`;
+
     }
 
     //Provide pagination details like current page and limit of records in each page
@@ -69,7 +74,7 @@ export const fetchAllTasksService = async (userId, filters) => {
 
     const offset = (pageInt - 1) * limitInt;
 
-    let order = [];
+    let orderClause = "";
 
     //Only push sorting details array, if there is sortBy param, and sortBy and sortOrder 
     //have valid values
@@ -78,22 +83,29 @@ export const fetchAllTasksService = async (userId, filters) => {
       (sortBy === "dueDate" || sortBy === "priority") &&
       (sortOrder.toUpperCase() === "ASC" || sortOrder.toUpperCase() === "DESC")
     ) {
-      order.push([sortBy, sortOrder.toUpperCase()]);
+      orderClause = `ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
     }
 
     //find all and count the tasks of the user based on the filters and sort order
-    const result = await Tasks.findAndCountAll({
-      where: whereClause,
-      limit: limitInt,
-      offset: offset,
-      order: order.length > 0 ? order : undefined,
-    });
+    const queryCount = `SELECT COUNT(*) FROM tasks ${whereClause};`;
+
+    const queryTasks = `
+      SELECT id, title, description, priority, dueDate, status, createdAt
+      FROM tasks 
+      ${whereClause} 
+      ${orderClause} 
+      LIMIT ${limit} OFFSET ${offset};
+    `;
+
+    const totalTasksCount = await db.one(queryCount);
+
+    const tasks = await db.any(queryTasks);
 
     const resultObject = {
-      tasks: result.rows,
-      totalTasks: result.count,
+      tasks,
+      totalTasks: totalTasksCount.count,
       currentPage: pageInt,
-      totalPages: Math.ceil(result.count / limitInt),
+      totalPages: Math.ceil(totalTasksCount.count / limitInt),
     };
 
     return resultObject;
@@ -107,12 +119,13 @@ export const getTaskByIdService = async (userId, taskId) => {
   try {
 
     //Find task of particular user with task id
-    const task = await Tasks.findOne({
-      where: {
-        id: taskId,
-        userId: userId,
-      },
-    });
+    const queryFind = `
+      SELECT id, title, description, priority, dueDate, status, userId, createdAt, updatedAt
+      FROM tasks
+      WHERE id = $1 AND userId = $2;
+    `;
+
+    const task = await db.oneOrNone(queryFind, [taskId, userId]);
 
     if (!task) {
       throw new Error("Task not found for the specified user");
@@ -146,24 +159,22 @@ const validateTaskBeforeCreateOrUpdate = (taskData) => {
 export const updateTaskService = async (userId, taskId, taskData) => {
   validateTaskBeforeCreateOrUpdate(taskData);
 
+  const { title, description, priority, dueDate, status } = taskData;
+
   try {
 
     //Update task of particular user with task Id and task details
-    const result = await Tasks.update(taskData, {
-      where: {
-        id: taskId,
-        userId: userId,
-      },
-    });
+    const queryUpdate = `
+    UPDATE tasks
+    SET title = $1, description = $2, priority = $3, dueDate = $4, status = $5
+    WHERE id = $6 AND userId = $7
+    RETURNING id, title, description, priority, dueDate, status, updatedAt;
+  `;
 
-    const updatedRowsCount = result[0];
+    const result = await db.one(queryUpdate, 
+      [title, description, priority, dueDate, status, taskId, userId]);
 
-    if (updatedRowsCount === 0) {
-      throw new Error("No task found with the provided taskId and userId.");
-    }
-
-    //return the updated tasks
-    return await getTaskByIdService(userId, taskId);
+    return result;
   } catch (error) {
     console.log("Error in updating the task");
     throw error;
@@ -173,13 +184,11 @@ export const updateTaskService = async (userId, taskId, taskData) => {
 export const deleteTaskService = async (userId, taskId) => {
   try {
     
-    //Find the task with particular id to be deleted
-    const task = await getTaskByIdService(userId, taskId);
-
     //Destroy the task in the db
-    await task.destroy();
+    const queryDelete = `DELETE FROM tasks WHERE id = $1 AND userId = $2 RETURNING *;`;
+    const deletedTask = await db.one(queryDelete, [taskId, userId]);
 
-    return task;
+    return deletedTask;
   } catch (error) {
     console.log("Error in deleting the task");
     throw error;
